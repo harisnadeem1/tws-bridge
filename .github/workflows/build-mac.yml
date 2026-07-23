@@ -1,0 +1,51 @@
+name: Build Mac App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller python-dotenv
+
+      - name: Build macOS app
+        run: |
+          python -m PyInstaller --clean --onefile --windowed --name "GianKom Tools TWS Bridge" main.py
+
+      - name: Show dist folder
+        run: |
+          ls -la dist
+
+      - name: Zip app
+        run: |
+          cd dist
+          if [ -d "GianKom Tools TWS Bridge.app" ]; then
+            zip -r GianKom-Tools-TWS-Bridge-mac.zip "GianKom Tools TWS Bridge.app"
+          elif [ -f "GianKom Tools TWS Bridge" ]; then
+            zip GianKom-Tools-TWS-Bridge-mac.zip "GianKom Tools TWS Bridge"
+          else
+            echo "Build output not found"
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GianKom-Tools-TWS-Bridge-mac
+          path: dist/GianKom-Tools-TWS-Bridge-mac.zip
